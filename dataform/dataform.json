@@ -1,0 +1,18 @@
+{
+  "warehouse": "bigquery",
+  "defaultSchema": "dataform",
+  "assertionSchema": "dataform_assertions",
+  "defaultDatabase": "your-project-id",
+  "defaultLocation": "US",
+  "vars": {
+    "bronze_schema": "bronze",
+    "silver_schema": "silver", 
+    "gold_schema": "gold",
+    "dataform_schema": "dataform",
+    "raw_dataset": "servicetitan_<project_id>",
+    "bronze_dataset": "bronze",
+    "new_customer_list_view": "vw_new_customer_list",
+    "sold_estimates_view": "vw_sold_estimates",
+    "master_tracker_export_view": "vw_master_tracker_export"
+  }
+} 
