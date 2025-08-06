@@ -2,7 +2,7 @@
   "warehouse": "bigquery",
   "defaultSchema": "dataform",
   "assertionSchema": "dataform_assertions",
-  "defaultDatabase": "your-project-id",
+  "defaultDatabase": "platform-partners-des",
   "defaultLocation": "US",
   "vars": {
     "bronze_schema": "bronze",
