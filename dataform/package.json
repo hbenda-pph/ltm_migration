@@ -1,0 +1,12 @@
+{
+  "name": "ltm-migration",
+  "version": "1.0.0",
+  "description": "LTM Migration Dataform Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["dataform", "bigquery", "ltm"],
+  "author": "",
+  "license": "ISC"
+}
