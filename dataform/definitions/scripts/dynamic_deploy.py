@@ -30,7 +30,7 @@ def generate_view_files(configs):
     
     for config in configs:
         context = {
-            "PROJECT_ID": config.project_id,
+            "PROJECT_ID": config.company_project_id,
             "COMPANY_ID": config.company_id,
             "RAW_DATASET": config.raw_dataset,
             "TARGET_DATASET": "silver"
@@ -57,7 +57,7 @@ def generate_dataform_json(configs):
         config["generation"].append({
             "name": f"company_{company.company_id}",
             "vars": {
-                "project_id": company.company_project_id,
+                "company_project_id": company.company_project_id,
                 "company_id": company.company_id,
                 "raw_dataset": f"servicetitan_{company.company_project_id.replace("-","_")}",
                 "target_dataset": "silver"
