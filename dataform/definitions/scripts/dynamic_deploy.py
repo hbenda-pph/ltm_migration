@@ -7,8 +7,8 @@ import jinja2
 COMPANIES_PROJECT = "constant-height-455614-i0"
 COMPANIES_DATASET = "settings"
 COMPANIES_TABLE = "companies"
-TEMPLATE_DIR = "definitions/views"
-OUTPUT_DIR = "definitions/generated"
+TEMPLATE_DIR = "../views"
+OUTPUT_DIR = "../generated"
 
 def get_company_configs():
     """Obtiene configuración completa de cada compañía activa"""
@@ -54,12 +54,13 @@ def generate_dataform_json(configs):
     }
     
     for company in configs:
+        raw_dataset = f"servicetitan_{company.company_project_id.replace('-','_')}"
         config["generation"].append({
-            "name": f"company_{company.company_id}",
+            "name": company.company_name,
             "vars": {
                 "company_project_id": company.company_project_id,
                 "company_id": company.company_id,
-                "raw_dataset": f"servicetitan_{company.company_project_id.replace("-","_")}",
+                "raw_dataset": raw_dataset,
                 "target_dataset": "silver"
             }
         })
