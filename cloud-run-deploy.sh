@@ -3,10 +3,10 @@
 
 PROJECT_ID="platform-partners-pro"
 REGION="us-central1"
-JOB_NAME="ltm-deployment-job"
-IMAGE_NAME="gcr.io/$PROJECT_ID/ltm-deployment"
+JOB_NAME="ltm-migration-job"
+IMAGE_NAME="gcr.io/$PROJECT_ID/ltm-migration"
 
-echo "🚀 Desplegando LTM Deployment Job..."
+echo "🚀 Desplegando LTM Migration Job..."
 
 # Construir imagen
 echo "📦 Construyendo imagen Docker..."
