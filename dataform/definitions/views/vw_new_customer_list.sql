@@ -1,7 +1,7 @@
 config {
   type: "view",
   schema: "silver", 
-  name: "${dataform.vars.new_customer_list_view}",
+  name: "vw_new_customer_list",
   description: "Vista NEW CUSTOMER LIST",
   tags: ["silver", "ltm", "new_customer_list"]
 }
@@ -18,7 +18,7 @@ SELECT c.id AS `Customer ID`
   LEFT JOIN `${dataform.projectId}.${dataform.vars.raw_dataset}.job` j 
     ON j.customer_id             = c.id 
    AND j.job_status              = 'Completed' 
-  LEFT JOIN (                                                     
+  LEFT JOIN (                                                    
         SELECT j2.campaign_id 
              , j2.customer_id 
              , c2.name

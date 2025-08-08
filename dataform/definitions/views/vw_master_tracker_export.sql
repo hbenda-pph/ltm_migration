@@ -1,7 +1,7 @@
 config {
   type: "view",
   schema: "silver", 
-  name: "${dataform.vars.master_tracker_export_view}",
+  name: "vw_master_tracker_export",
   description: "View MASTER TRACKER EXPORT",
   tags: ["silver", "ltm", "master_tracker_export"]
 }
@@ -15,7 +15,7 @@ SELECT j.job_number                                                             
      , j.job_generated_lead_source_job_id                                                   AS `Lead Generated From`
      , il.sub_total_lead                                                                    AS `Sales from Leads Created`
      , ii.total_items                                                                       AS `Total`
-     , FORMAT_DATE("%m/%d/%Y",${dataform.vars.bronze_dataset}.convert_utc_localtz(j.completed_on,'MONARCH')) AS `Completion Date`
+     , FORMAT_DATE("%m/%d/%Y",bronze.convert_utc_localtz(j.completed_on,'MONARCH')) AS `Completion Date`
      , j.customer_id                                                                        AS `Customer Id`
      , TRIM(c.name)                                                                         AS `Customer Name` 
      , TRIM(ts.name)                                                                        AS `Sold By` 
@@ -25,7 +25,7 @@ SELECT j.job_number                                                             
      , TRIM(ca.name)                                                                        AS `Job Campaign`
      , ROUND(ii.sold_hours,2)                                                               AS `Sould Hours`
   FROM `${dataform.projectId}.${dataform.vars.raw_dataset}.job`                             j 
-  LEFT JOIN `${dataform.projectId}.${dataform.vars.bronze_dataset}.job-types`               jt
+  LEFT JOIN `${dataform.projectId}.bronze.job-types`                                        jt
     ON jt.id                                                                                = j.job_type_id
   LEFT JOIN `${dataform.projectId}.${dataform.vars.raw_dataset}.business_unit`              bu
     ON bu.id                                                                                = j.business_unit_id
@@ -33,7 +33,7 @@ SELECT j.job_number                                                             
     ON p.id                                                                                 = j.project_id
   LEFT JOIN `${dataform.projectId}.${dataform.vars.raw_dataset}.employee`                   e
     ON e.id                                                                                 = j.job_generated_lead_source_employee_id
-  LEFT JOIN `${dataform.projectId}.${dataform.vars.bronze_dataset}.technicians`             t
+  LEFT JOIN `${dataform.projectId}.bronze.technicians`                                      t
     ON t.id                                                                                 = j.job_generated_lead_source_employee_id 
   LEFT JOIN 
        (
@@ -62,12 +62,12 @@ SELECT j.job_number                                                             
              , ARRAY_AGG(DISTINCT IFNULL(t.name, ''))                                       AS assigned_technicians
              , ARRAY_AGG(IFNULL(t.name, '') ORDER BY js.split DESC LIMIT 1)[SAFE_OFFSET(0)] AS primary_technician
           FROM `${dataform.projectId}.${dataform.vars.raw_dataset}.job_split`               js
-          LEFT JOIN `${dataform.projectId}.${dataform.vars.bronze_dataset}.technicians`     t 
+          LEFT JOIN `${dataform.projectId}.bronze.technicians`                              t 
             ON js.technician_id                                                             = t.id
          GROUP BY                                                                           js.job_id
        )                                                                                    ti 
     ON ti.job_id                                                                            = j.id
-  LEFT JOIN `${dataform.projectId}.${dataform.vars.bronze_dataset}.technicians`             ts
+  LEFT JOIN `${dataform.projectId}.bronze.technicians`                                      ts
     ON ts.id                                                                                = j.sold_by_id    
   LEFT JOIN 
        (
@@ -79,7 +79,7 @@ SELECT j.job_number                                                             
          GROUP BY                                                                           job_id 
        )                                                                                    es 
     ON es.job_id                                                                            = j.id      
-  LEFT JOIN `${dataform.projectId}.${dataform.vars.bronze_dataset}.campaigns`               ca
+  LEFT JOIN `${dataform.projectId}.bronze.campaigns`                                        ca
     ON ca.id                                                                                = j.campaign_id
  WHERE j.job_status                                                                         = 'Completed'
  ORDER BY j.completed_on

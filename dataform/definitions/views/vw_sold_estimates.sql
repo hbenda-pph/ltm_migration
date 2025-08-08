@@ -1,7 +1,7 @@
 config {
   type: "view",
   schema: "silver", 
-  name: "${dataform.vars.sold_estimates_view}",
+  name: "vw_sold_estimates",
   description: "Vista SOLD ESTIMATES",
   tags: ["silver", "ltm", "sold_estimates"]
 }
