@@ -1,7 +1,7 @@
 {
   "warehouse": "bigquery",
   "defaultSchema": "silver",
-  "defaultDatabase": "your-project-id",
+  "defaultDatabase": "platform-partners-pro",
   "vars": {
     "raw_dataset": "servicetitan_<project_id>"
   }

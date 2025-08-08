@@ -2,11 +2,13 @@
 """
 Script simple para desplegar vistas Dataform a todos los proyectos de compañías.
 Lee la tabla companies desde platform-partners-pro y ejecuta Dataform para cada proyecto.
+Ejecución ON-DEMAND para despliegues de nuevas vistas y estructuras.
 """
 
 import subprocess
 import json
 import sys
+import datetime
 from pathlib import Path
 from google.cloud import bigquery
 
@@ -62,19 +64,29 @@ def run_dataform():
     
     try:
         print("  🔄 Compilando...")
-        subprocess.run(["dataform", "compile"], cwd=dataform_dir, check=True, capture_output=True)
+        result = subprocess.run(["dataform", "compile"], cwd=dataform_dir, check=True, capture_output=True, text=True)
+        print(f"    ✅ Compilación exitosa")
         
         print("  🚀 Ejecutando...")
-        subprocess.run(["dataform", "run"], cwd=dataform_dir, check=True, capture_output=True)
+        result = subprocess.run(["dataform", "run"], cwd=dataform_dir, check=True, capture_output=True, text=True)
+        print(f"    ✅ Ejecución exitosa")
         
         return True
     except subprocess.CalledProcessError as e:
         print(f"  ❌ Error ejecutando Dataform: {e}")
+        if e.stdout:
+            print(f"    STDOUT: {e.stdout}")
+        if e.stderr:
+            print(f"    STDERR: {e.stderr}")
         return False
 
 def main():
     """Función principal."""
-    print("🚀 Iniciando despliegue a proyectos pendientes...")
+    start_time = datetime.datetime.now()
+    print("🚀 LTM Migration - Despliegue ON-DEMAND")
+    print("=" * 60)
+    print(f"⏰ Inicio: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🎯 Objetivo: Desplegar vistas y funciones a proyectos pendientes")
     print("=" * 60)
     
     # Obtener compañías pendientes (estado 0)
@@ -82,23 +94,27 @@ def main():
     
     if not companies:
         print("ℹ️ No hay compañías pendientes de replicación (estado 0)")
-        print("💡 Para agregar una compañía a la cola, actualiza su company_ltm_status a 0")
+        print("💡 Para agregar una compañía a la cola:")
+        print("   UPDATE `platform-partners-pro.settings.companies`")
+        print("   SET company_ltm_status = 0")
+        print("   WHERE company_id = 'TU_COMPAÑIA'")
         return
     
     print(f"📋 Encontradas {len(companies)} compañías pendientes:")
     for company in companies:
         print(f"  ⏳ {company['company_name']} ({company['company_project_id']})")
     
-    print("\n🔄 Iniciando despliegue...")
+    print(f"\n🔄 Iniciando despliegue...")
     
     success_count = 0
     error_count = 0
+    errors = []
     
-    for company in companies:
+    for i, company in enumerate(companies, 1):
         project_id = company['company_project_id']
         company_name = company['company_name']
         
-        print(f"\n--- Procesando {company_name} ({project_id}) ---")
+        print(f"\n--- [{i}/{len(companies)}] Procesando {company_name} ({project_id}) ---")
         
         # Actualizar configuración
         update_dataform_config(project_id)
@@ -110,15 +126,33 @@ def main():
         else:
             print(f"  ❌ Error en {project_id}")
             error_count += 1
+            errors.append(f"{company_name} ({project_id})")
+    
+    end_time = datetime.datetime.now()
+    duration = end_time - start_time
     
     print(f"\n📊 Resumen de despliegue:")
     print(f"  ✅ Exitosos: {success_count}")
     print(f"  ❌ Fallidos: {error_count}")
     print(f"  📊 Total: {len(companies)}")
+    print(f"  ⏱️ Duración: {duration}")
+    
+    if errors:
+        print(f"\n❌ Errores encontrados:")
+        for error in errors:
+            print(f"  - {error}")
     
     if success_count > 0:
-        print(f"\n💡 Para marcar como exitoso, actualiza company_ltm_status a 1")
-        print(f"💡 Para marcar como error, actualiza company_ltm_status a 2")
+        print(f"\n💡 Para marcar como exitoso:")
+        print(f"   UPDATE `platform-partners-pro.settings.companies`")
+        print(f"   SET company_ltm_status = 1")
+        print(f"   WHERE company_ltm_status = 0")
+        
+    if error_count > 0:
+        print(f"\n💡 Para marcar como error:")
+        print(f"   UPDATE `platform-partners-pro.settings.companies`")
+        print(f"   SET company_ltm_status = 2")
+        print(f"   WHERE company_ltm_status = 0")
 
 if __name__ == "__main__":
     main() 

@@ -26,7 +26,16 @@ dataform/
 
 ## Uso
 
-### Opción 1: Despliegue Automático (Recomendado)
+### Opción 1: Cloud Run Job (Recomendado para GCloud)
+```bash
+# Desplegar Cloud Run job
+./cloud-run-deploy.sh
+
+# Ejecutar deployment
+gcloud run jobs execute ltm-deployment-job --region us-central1
+```
+
+### Opción 2: Despliegue Automático Local
 ```bash
 # Desplegar a todos los proyectos automáticamente
 python deploy_all.py
@@ -34,11 +43,11 @@ python deploy_all.py
 
 Este script:
 1. Lee la tabla `companies` desde `platform-partners-pro.settings.companies`
-2. Itera sobre todos los proyectos
+2. Itera sobre todos los proyectos con `company_ltm_status = 0`
 3. Actualiza `dataform.json` automáticamente
 4. Ejecuta `dataform run` para cada proyecto
 
-### Opción 2: Despliegue Manual
+### Opción 3: Despliegue Manual
 1. **Configurar Proyecto**
    Editar `dataform/dataform.json`:
    ```json
