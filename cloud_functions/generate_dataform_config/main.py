@@ -12,14 +12,13 @@ def fetch_companies_to_replicate():
     """Consulta las compañías pendientes de replicación"""
     bq = bigquery.Client()
     query = f"""
-        SELECT
-            company_id,
-            company_name,
-            company_project_id,
-            company_ltm_status
+        SELECT company_id
+             , company_name
+             , company_project_id
+             , company_ltm_status
         FROM `{PROJECT_SOURCE}.{DATASET_NAME}.{TABLE_NAME}`
-        WHERE company_ltm_status = 0
-        ORDER BY company_id
+       WHERE company_ltm_status = CAST(0 AS INT64)
+       ORDER BY company_id
     """
     return list(bq.query(query))
 
