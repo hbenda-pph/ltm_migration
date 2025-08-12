@@ -42,11 +42,18 @@ def generate_dataform_config(companies):
     }
 
 def upload_config_to_gcs(config):
-    """Sube la configuración a Google Cloud Storage"""
-    client = storage.Client()
-    bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob("generate_dataform_config/latest.json")
-    blob.upload_from_string(json.dumps(config, indent=2))
+    try:
+        client = storage.Client()
+        # Verifica que el bucket existe
+        bucket = client.get_bucket(BUCKET_NAME)
+        print(f"Bucket encontrado: {BUCKET_NAME}")
+        
+        blob = bucket.blob("dataform_config/latest.json")
+        blob.upload_from_string(json.dumps(config, indent=2))
+        print("Configuración subida exitosamente")
+    except Exception as e:
+        print(f"Error subiendo a GCS: {str(e)}")
+        raise
 
 def update_company_status(company_id, new_status):
     """Actualiza el estado en la tabla companies"""
@@ -59,36 +66,50 @@ def update_company_status(company_id, new_status):
     bq.query(query).result()
 
 def dataform_replication_handler(request):
-    """Función principal HTTP"""
+    print("Inicio de ejecución")  # Log inicial
+    
     try:
-        # 1. Obtener compañías pendientes
+        print("Obteniendo compañías...")
         companies = fetch_companies_to_replicate()
-        if not companies:
-            return {"status": "skipped", "message": "No companies pending replication"}, 200
+        print(f"Compañías encontradas: {len(companies)}")
         
-        # 2. Generar configuración
+        if not companies:
+            print("No hay compañías pendientes")
+            return {"status": "skipped"}, 200
+        
+        print("Generando configuración...")
         config = generate_dataform_config(companies)
         
-        # 3. Bloquear compañías (marcar como IN_PROGRESS)
+        print("Actualizando estados a IN_PROGRESS...")
         for company in config["active_companies"]:
-            update_company_status(company["id"], 3)  # 3 = IN_PROGRESS
+            update_company_status(company["id"], 3)
+            print(f"Actualizado {company['id']}")
         
-        # 4. Subir configuración a GCS
+        print("Subiendo configuración a GCS...")
         upload_config_to_gcs(config)
         
-        # 5. Actualizar estados a SUCCESS
+        print("Actualizando estados a SUCCESS...")
         for company in config["active_companies"]:
-            update_company_status(company["id"], 1)  # 1 = SUCCESS
+            update_company_status(company["id"], 1)
         
+        print("Proceso completado")
         return {
             "status": "success",
-            "companies_processed": len(companies),
-            "config_path": f"gs://{BUCKET_NAME}/dataform_config/latest.json"
+            "companies_processed": len(companies)
         }, 200
     
     except Exception as e:
-        # En caso de error, actualizar estados
+        print(f"ERROR: {str(e)}")
         if 'companies' in locals():
+            print("Intentando actualizar estados a ERROR...")
             for company in companies:
-                update_company_status(company.company_id, 2)  # 2 = ERROR
+                try:
+                    update_company_status(company.company_id, 2)
+                except Exception as update_error:
+                    print(f"Error actualizando estado: {str(update_error)}")
+        
+        # Registra el stack trace completo
+        import traceback
+        traceback.print_exc()
+        
         return {"status": "error", "message": str(e)}, 500
