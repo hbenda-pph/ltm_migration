@@ -18,7 +18,7 @@ def fetch_companies_to_replicate():
             company_project_id,
             company_ltm_status
         FROM `{PROJECT_SOURCE}.{DATASET_NAME}.{TABLE_NAME}`
-        WHERE company_ltm_status = 0  # SOLO pendientes (PENDING)
+        WHERE company_ltm_status = 0
         ORDER BY company_id
     """
     return list(bq.query(query))
