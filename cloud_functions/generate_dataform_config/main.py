@@ -54,13 +54,13 @@ def upload_config_to_gcs(config):
         print(f"Error subiendo a GCS: {str(e)}")
         raise
 
-def update_company_status(company_id, new_status):
+def update_company_status(company_id: int, new_status: int):
     """Actualiza el estado en la tabla companies"""
     bq = bigquery.Client()
     query = f"""
         UPDATE `{PROJECT_SOURCE}.{DATASET_NAME}.{TABLE_NAME}`
         SET company_ltm_status = {new_status}
-        WHERE company_id = '{company_id}'
+        WHERE company_id = {company_id}
     """
     bq.query(query).result()
 
