@@ -3,10 +3,10 @@ from google.cloud import bigquery, storage
 from datetime import datetime
 import pytz
 
-PROJECT_SOURCE = "tu-proyecto-metadata"  # Ajustar con tu proyecto
-DATASET_NAME = "tu-dataset"             # Ajustar con tu dataset
-TABLE_NAME = "companies"                # Tu tabla de control
-BUCKET_NAME = "tu-bucket-configs"      # Bucket para guardar configs
+PROJECT_SOURCE = "constant-height-455614-i0"    
+DATASET_NAME = "settings"                              
+TABLE_NAME = "companies"                               
+BUCKET_NAME = "ltm_migration" 
 
 def fetch_companies_to_replicate():
     """Consulta las compañías pendientes de replicación"""
@@ -16,7 +16,7 @@ def fetch_companies_to_replicate():
             company_id,
             company_name,
             company_project_id,
-            company_bigquery_status
+            company_ltm_status
         FROM `{PROJECT_SOURCE}.{DATASET_NAME}.{TABLE_NAME}`
         WHERE company_ltm_status = 0  # SOLO pendientes (PENDING)
         ORDER BY company_id
@@ -32,10 +32,10 @@ def generate_dataform_config(companies):
                 "id": row.company_id,
                 "name": row.company_name,
                 "project": row.company_project_id,
-                "status": "active" if row.company_bigquery_status else "inactive",
+                "ltm_status": row.company_ltm_status,
                 "datasets": {
-                    "raw": "raw_data",       # Ajustar según tu estructura
-                    "analytics": "analytics" # Ajustar según tu estructura
+                    "raw": "servicetitan_"+row.company_project_id.replace("-", "_"),
+                    "bronze": "bronze"
                 }
             } for row in companies
         ]
@@ -45,7 +45,7 @@ def upload_config_to_gcs(config):
     """Sube la configuración a Google Cloud Storage"""
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob("dataform_config/latest.json")
+    blob = bucket.blob("generate_dataform_config/latest.json")
     blob.upload_from_string(json.dumps(config, indent=2))
 
 def update_company_status(company_id, new_status):
@@ -53,8 +53,7 @@ def update_company_status(company_id, new_status):
     bq = bigquery.Client()
     query = f"""
         UPDATE `{PROJECT_SOURCE}.{DATASET_NAME}.{TABLE_NAME}`
-        SET company_ltm_status = {new_status},
-            last_replication_attempt = CURRENT_TIMESTAMP()
+        SET company_ltm_status = {new_status}
         WHERE company_id = '{company_id}'
     """
     bq.query(query).result()
