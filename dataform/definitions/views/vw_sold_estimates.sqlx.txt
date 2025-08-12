@@ -13,12 +13,11 @@ SELECT e.business_unit_name AS `Business Unit`
      , e.status_name        AS `Estimate Status`
      , e.subtotal           AS `Estimate Subtotal`
      , DATE(e.sold_on)      AS `Sold On`
---     , j.install_jobs       AS `Install Job(s)`
      , e.customer_id        AS `Customer Id`     
      , c.name               AS `Customer Name`     
      , t.name               AS `Sold By`     
 FROM `${dataform.projectId}.${dataform.vars.raw_dataset}.estimate`        e
-LEFT JOIN `${dataform.projectId}.${dataform.vars.raw_dataset}.customer`   c
+LEFT JOIN `${dataform.projectId}.${dataform.vars.raw}.customer`   c
   ON c.id                   = e.customer_id
-LEFT JOIN `${dataform.projectId}.${dataform.vars.raw_dataset}.technician` t
+LEFT JOIN `${dataform.projectId}.${dataform.vars.raw}.technician` t
   ON t.id                   = e.sold_by
