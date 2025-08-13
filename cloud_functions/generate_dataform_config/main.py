@@ -64,7 +64,8 @@ def update_company_status(company_id: int, new_status: int):
     """
     bq.query(query).result()
 
-def trigger_dataform_execution():
+def trigger_dataform_execution(companies=None):
+
     from googleapiclient.discovery import build
     from google.auth import default
     
