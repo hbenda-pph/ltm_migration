@@ -65,25 +65,47 @@ def update_company_status(company_id: int, new_status: int):
     bq.query(query).result()
 
 def trigger_dataform_execution(companies):
-    from googleapiclient.discovery import build
-    
-    dataform = build('dataform', 'v1beta1')
-    project_id = "tu-proyecto-dataform"  # Donde está el repositorio Dataform
-    location = "us-central1"
-    repository_id = "tu-repositorio"
-    
-    dataform.projects().locations().repositories().workspaces().call(
-        name=f"projects/{project_id}/locations/{location}/repositories/{repository_id}/workspaces/workspace-name",
-        body={
-            "compilationResult": {
-                "gitCommitish": "main",
-                "workspace": (
-                    f"projects/{project_id}/locations/{location}/"
-                    f"repositories/{repository_id}/workspaces/workspace-name"
-                )
+    try:
+        from googleapiclient.discovery import build
+        from google.auth import default
+
+        # 1. Autenticación
+        credentials, _ = default()
+        dataform = build('dataform', 'v1beta1', credentials=credentials)
+
+        # 2. Configuración de la ejecución
+        project_id = "tu-proyecto"  # Reemplaza con tu Project ID
+        location = "us-central1"    # Ajusta la región si es diferente
+        repository_id = "tu-repositorio-dataform"
+        workspace_id = "tu-workspace"  # Usualmente "default"
+
+        parent = f"projects/{project_id}/locations/{location}/repositories/{repository_id}"
+
+        # 3. Crear solicitud de ejecución
+        response = dataform.projects().locations().repositories().workflowInvocations().create(
+            parent=parent,
+            body={
+                "compilationResult": {
+                    "gitCommitish": "main",  # O tu rama principal
+                    "workspace": f"{parent}/workspaces/{workspace_id}"
+                },
+                "invocationConfig": {
+                    "includedTargets": [
+                        {"database": "", "schema": "silver", "name": "vw_sold_estimates"}
+                    ],
+                    "transitiveDependenciesIncluded": True
+                }
             }
-        }
-    ).execute()    
+        ).execute()
+
+        print(f"Ejecución de Dataform iniciada: {response['name']}")
+        return True
+
+    except Exception as e:
+        print(f"Error al iniciar Dataform: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 def dataform_replication_handler(request):
     print("Inicio de ejecución")  # Log inicial

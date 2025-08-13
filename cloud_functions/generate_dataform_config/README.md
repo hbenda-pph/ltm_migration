@@ -23,4 +23,4 @@ gcloud functions deploy generate_dataform_config \
   --allow-unauthenticated
 
   ### RUN
-  curl -X POST "https://us-central1-$(gcloud config get-value project).cloudfunctions.net/generate_dataform_config
+  curl -X POST "https://us-central1-$(gcloud config get-value project).cloudfunctions.net/generate_dataform_config"
