@@ -21,3 +21,6 @@ gcloud functions deploy generate_dataform_config \
   --region us-central1 \
   --set-env-vars PROJECT_SOURCE=constant-height-455614-i0 \
   --allow-unauthenticated
+
+  ### RUN
+  curl -X POST "https://us-central1-$(gcloud config get-value project).cloudfunctions.net/generate_dataform_config
