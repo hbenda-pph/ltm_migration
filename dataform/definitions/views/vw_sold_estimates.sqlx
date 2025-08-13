@@ -8,34 +8,31 @@ config {
 
 js {
   const { ACTIVE_COMPANIES } = require('../../includes/config_loader');
-  module.exports = function generateSql(projectId, rawDataset) {
-    return '
-      SELECT e.business_unit_name AS `Business Unit`
-           , e.id                 AS `Estimate Id`
-           , e.name               AS `Estimate Name`
-           , e.job_id             AS `Parent Job Number`
-           , e.status_name        AS `Estimate Status`
-           , e.subtotal           AS `Estimate Subtotal`
-           , DATE(e.sold_on)      AS `Sold On`
-           , e.customer_id        AS `Customer Id`     
-           , c.name               AS `Customer Name`     
-           , t.name               AS `Sold By`     
-        FROM `${projectId}.${rawDataset}.estimate`        e
-        LEFT JOIN `${projectId}.${rawDataset}.customer`   c
-          ON c.id                 = e.customer_id
-        LEFT JOIN `${projectId}.${rawDataset}.technician` t
-          ON t.id                 = e.sold_by
-    ';
-  }
-}
 
-js {
-  const { ACTIVE_COMPANIES } = require('../includes/config_loader');
-  module.exports = function generateAll() {
-    return ACTIVE_COMPANIES.map(company => ({
-      name: `${company.project}.silver.vw_sold_estimates`,
-      sql: generateSql(company.project, company.datasets.raw),
-      dependencies: []
-    }));
-  }
+ // Función para generar SQL específico por compañía
+  const generateSql = (projectId, rawDataset) => `
+    SELECT 
+      e.business_unit_name AS \`Business Unit\`,
+      e.id AS \`Estimate Id\`,
+      e.name AS \`Estimate Name\`,
+      e.job_id AS \`Parent Job Number\`,
+      e.status_name AS \`Estimate Status\`,
+      e.subtotal AS \`Estimate Subtotal\`,
+      DATE(e.sold_on) AS \`Sold On\`,
+      e.customer_id AS \`Customer Id\`,
+      c.name AS \`Customer Name\`,
+      t.name AS \`Sold By\`
+    FROM \`${projectId}.${rawDataset}.estimate\` e
+    LEFT JOIN \`${projectId}.${rawDataset}.customer\` c
+      ON c.id = e.customer_id
+    LEFT JOIN \`${projectId}.${rawDataset}.technician\` t
+      ON t.id = e.sold_by
+  `;
+
+  // Genera una vista por compañía
+  module.exports = ACTIVE_COMPANIES.map(company => ({
+    name: `${company.project}.silver.vw_sold_estimates`,
+    sql: generateSql(company.project, company.datasets.raw),
+    dependencies: []
+  }));
 }
