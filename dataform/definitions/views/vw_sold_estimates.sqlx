@@ -7,10 +7,11 @@ config {
 }
 
 js {
+  // Ruta exacta desde definitions/views/
   const { ACTIVE_COMPANIES } = require('../../includes/config_loader');
 
- // Función para generar SQL específico por compañía
-  const generateSql = (projectId, rawDataset) => `
+  // SQL estático para evitar errores
+  const SQL_TEMPLATE = `
     SELECT 
       e.business_unit_name AS \`Business Unit\`,
       e.id AS \`Estimate Id\`,
@@ -22,17 +23,21 @@ js {
       e.customer_id AS \`Customer Id\`,
       c.name AS \`Customer Name\`,
       t.name AS \`Sold By\`
-    FROM \`${projectId}.${rawDataset}.estimate\` e
-    LEFT JOIN \`${projectId}.${rawDataset}.customer\` c
-      ON c.id = e.customer_id
-    LEFT JOIN \`${projectId}.${rawDataset}.technician\` t
-      ON t.id = e.sold_by
+    FROM \`{project}.{dataset}.estimate\` e
+    LEFT JOIN \`{project}.{dataset}.customer\` c ON c.id = e.customer_id
+    LEFT JOIN \`{project}.{dataset}.technician\` t ON t.id = e.sold_by
   `;
 
-  // Genera una vista por compañía
-  module.exports = ACTIVE_COMPANIES.map(company => ({
-    name: `${company.project}.silver.vw_sold_estimates`,
-    sql: generateSql(company.project, company.datasets.raw),
-    dependencies: []
-  }));
+  // Generación para cada compañía
+  module.exports = ACTIVE_COMPANIES.map(company => {
+    const finalSQL = SQL_TEMPLATE
+      .replace(/{project}/g, company.project)
+      .replace(/{dataset}/g, company.datasets.raw);
+    
+    return {
+      name: `${company.project}.silver.vw_sold_estimates`,
+      sql: finalSQL,
+      dependencies: []
+    };
+  });
 }
