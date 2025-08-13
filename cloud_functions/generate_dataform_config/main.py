@@ -64,6 +64,27 @@ def update_company_status(company_id: int, new_status: int):
     """
     bq.query(query).result()
 
+def trigger_dataform_execution(companies):
+    from googleapiclient.discovery import build
+    
+    dataform = build('dataform', 'v1beta1')
+    project_id = "tu-proyecto-dataform"  # Donde está el repositorio Dataform
+    location = "us-central1"
+    repository_id = "tu-repositorio"
+    
+    dataform.projects().locations().repositories().workspaces().call(
+        name=f"projects/{project_id}/locations/{location}/repositories/{repository_id}/workspaces/workspace-name",
+        body={
+            "compilationResult": {
+                "gitCommitish": "main",
+                "workspace": (
+                    f"projects/{project_id}/locations/{location}/"
+                    f"repositories/{repository_id}/workspaces/workspace-name"
+                )
+            }
+        }
+    ).execute()    
+
 def dataform_replication_handler(request):
     print("Inicio de ejecución")  # Log inicial
     
@@ -90,6 +111,8 @@ def dataform_replication_handler(request):
         print("Actualizando estados a SUCCESS...")
         for company in config["active_companies"]:
             update_company_status(company["id"], 1)
+
+        trigger_dataform_execution(companies)  
         
         print("Proceso completado")
         return {
