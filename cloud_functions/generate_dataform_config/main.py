@@ -64,47 +64,41 @@ def update_company_status(company_id: int, new_status: int):
     """
     bq.query(query).result()
 
-def trigger_dataform_execution(companies):
+def trigger_dataform_execution():
+    from googleapiclient.discovery import build
+    from google.auth import default
+    
+    credentials, _ = default()
+    service = build('dataform', 'v1beta1', credentials=credentials)
+   
+    # 2. Configuración de la ejecución
+    project_id = "constant-height-455614-i0"  # Reemplaza con tu Project ID
+    location = "us-central1"    # Ajusta la región si es diferente
+    repository_id = "ltm_migration"
+    workspace_id = "ltm_migration_wrkspc"  # Usualmente "default"
+
     try:
-        from googleapiclient.discovery import build
-        from google.auth import default
-
-        # 1. Autenticación
-        credentials, _ = default()
-        dataform = build('dataform', 'v1beta1', credentials=credentials)
-
-        # 2. Configuración de la ejecución
-        project_id = "constant-height-455614-i0"  # Reemplaza con tu Project ID
-        location = "us-central1"    # Ajusta la región si es diferente
-        repository_id = "ltm_migration"
-        workspace_id = "ltm_migration_wrkspc"  # Usualmente "default"
-
-        parent = f"projects/{project_id}/locations/{location}/repositories/{repository_id}"
-
-        # 3. Crear solicitud de ejecución
-        response = dataform.projects().locations().repositories().workflowInvocations().create(
-            parent=parent,
-            body={
+        response = service.projects().locations().repositories().workflowInvocations().create(
+            parent=f"projects/{project_id}/locations/{location}/repositories/{repository_id}",
+            workflowInvocation={
                 "compilationResult": {
-                    "gitCommitish": "main",  # O tu rama principal
-                    "workspace": f"{parent}/workspaces/{workspace_id}"
+                    "gitCommitish": "main",
+                    "workspace": (
+                        f"projects/{project_id}/locations/{location}/"
+                        f"repositories/{repository_id}/workspaces/{workspace_id}"
+                    )
                 },
                 "invocationConfig": {
-                    "includedTargets": [
-                        {"database": "", "schema": "silver", "name": "vw_sold_estimates"}
-                    ],
+                    "includedTags": ["multi-tenant"],
                     "transitiveDependenciesIncluded": True
                 }
             }
         ).execute()
-
-        print(f"Ejecución de Dataform iniciada: {response['name']}")
+        
+        print(f"Ejecución iniciada: {response['name']}")
         return True
-
     except Exception as e:
-        print(f"Error al iniciar Dataform: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        print(f"Error al ejecutar Dataform: {str(e)}")
         return False
 
 def dataform_replication_handler(request):

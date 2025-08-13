@@ -8,8 +8,10 @@ def load_config():
     blob = bucket.blob("dataform_config/latest.json")
     
     try:
-        config = json.loads(blob.download_as_string())
-        print(f"Configuración cargada: {len(config['active_companies'])} compañías")
+        content = blob.download_as_string()
+        print("Contenido del JSON:", content)  # Debug
+        config = json.loads(content)
+        print("Compañías activas:", [c['id'] for c in config['active_companies']])  # Debug
         return config
     except Exception as e:
         raise ValueError(f"Error cargando configuración: {str(e)}")
