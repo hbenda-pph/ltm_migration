@@ -74,10 +74,10 @@ def trigger_dataform_execution(companies):
         dataform = build('dataform', 'v1beta1', credentials=credentials)
 
         # 2. Configuración de la ejecución
-        project_id = "tu-proyecto"  # Reemplaza con tu Project ID
+        project_id = "constant-height-455614-i0"  # Reemplaza con tu Project ID
         location = "us-central1"    # Ajusta la región si es diferente
-        repository_id = "tu-repositorio-dataform"
-        workspace_id = "tu-workspace"  # Usualmente "default"
+        repository_id = "ltm_migration"
+        workspace_id = "ltm_migration_wrkspc"  # Usualmente "default"
 
         parent = f"projects/{project_id}/locations/{location}/repositories/{repository_id}"
 
